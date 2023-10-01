@@ -56,15 +56,15 @@ int fetch_weather_data() {
         beast::flat_buffer buffer;
 
         // Declare a container to hold the response
-        http::response<http::dynamic_body> res;
+        http::response<http::string_body> res;
 
         // Receive the HTTP response
         http::read(stream, buffer, res);
 
         // Write the message to standard out
-        std::cout << res << std::endl;
-
-
+        std::cout << res.body() << std::endl;
+        auto j = json::parse(res.body());
+        std::cout << j.at("hourly_units").at("rain") << std::endl;
         // Gracefully close the socket
         beast::error_code ec;
         stream.socket().shutdown(tcp::socket::shutdown_both, ec);
