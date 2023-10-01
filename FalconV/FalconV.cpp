@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <boost/asio.hpp>
+#include <boost/json.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
@@ -11,6 +12,7 @@
 namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
+namespace json = boost::json;
 using tcp = net::ip::tcp;
 
 const std::string API_URL = "api.open-meteo.com";
@@ -61,6 +63,7 @@ int fetch_weather_data() {
 
         // Write the message to standard out
         std::cout << res << std::endl;
+
 
         // Gracefully close the socket
         beast::error_code ec;
