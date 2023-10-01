@@ -23,7 +23,21 @@ const std::string LOCATION = "latitude=51.10&longitude=17.03&hourly=temperature_
 
 
 // Function to process weather data and raise alerts
-void process_weather_data() {
+void process_weather_data(const json::value& j) {
+    auto temperature_2m_arr = j.at("hourly").at("temperature_2m").as_array();
+    auto rain_arr = j.at("hourly").at("rain").as_array();
+    auto date_and_time_arr = j.at("hourly").at("time").as_array();
+
+    auto begin = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.begin(), rain_arr.begin(), date_and_time_arr.begin()));
+    auto end = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.end(), rain_arr.end(), date_and_time_arr.end()));
+
+    for (auto it = begin; it != end; ++it) {
+        auto temperature = boost::get<0>(*it).as_double();
+        auto rainfall = boost::get<1>(*it).as_double();
+        auto date_and_time = boost::get<2>(*it).as_string().c_str();
+
+        std::cout << "Temperature: " << temperature << ", Rainfall: " << rainfall << " expected on " << date_and_time << std::endl;
+    }
 }
 
 // Function to fetch weather data from the API
@@ -67,21 +81,8 @@ int fetch_weather_data() {
         std::cout << res.body() << std::endl;
         auto j = json::parse(res.body());
         
-        // Extract temperature_2m and rain arrays.
-        auto temperature_2m_arr = j.at("hourly").at("temperature_2m").as_array(); 
-        auto rain_arr = j.at("hourly").at("rain").as_array();
-        auto date_and_time_arr = j.at("hourly").at("time").as_array();
-        // Iterate over both arrays simultaneously using zip iterator.
-        auto begin = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.begin(), rain_arr.begin(), date_and_time_arr.begin()));
-        auto end = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.end(), rain_arr.end(), date_and_time_arr.end()));
+        process_weather_data(j);
 
-        for (auto it = begin; it != end; ++it) {
-            auto temperature = boost::get<0>(*it).as_double();
-            auto rainfall = boost::get<1>(*it).as_double();
-            auto date_and_time = boost::get<2>(*it).as_string().c_str();
-            // Now, 'temperature' and 'rainfall' hold the values from both arrays for the current iteration.
-            std::cout << "Temperature: " << temperature << ", Rainfall: " << rainfall << "expected on " << date_and_time  <<std::endl;
-        }
         // Gracefully close the socket
         beast::error_code ec;
         stream.socket().shutdown(tcp::socket::shutdown_both, ec);
