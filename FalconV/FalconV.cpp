@@ -28,28 +28,39 @@ json::value weather_data;
 std::mutex location_mutex; 
 std::mutex weather_data_mutex;
 
-// Function to process weather data and raise alerts
+// This function processes weather data and raises alerts based on certain conditions.
 void process_weather_data(const std::string& latitude, const std::string& longitude) {
     while (true) {
         // Check if weather_data is valid
         if (!weather_data.is_null()) {
+            // Extract temperature, rainfall, and date-time arrays from weather_data
             auto temperature_2m_arr = weather_data.at("hourly").at("temperature_2m").as_array();
             auto rain_arr = weather_data.at("hourly").at("rain").as_array();
             auto date_and_time_arr = weather_data.at("hourly").at("time").as_array();
 
+            // Create iterators to loop over all three arrays simultaneously
             auto begin = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.begin(), rain_arr.begin(), date_and_time_arr.begin()));
             auto end = boost::make_zip_iterator(boost::make_tuple(temperature_2m_arr.end(), rain_arr.end(), date_and_time_arr.end()));
 
+            // Print header for weather data report
             std::cout << "----------------Weather data report----------------" << std::endl;
+            // Print the current location
             std::cout << "----------------Location: " << latitude << ", " << longitude << "----------------" << std::endl;
+
+            // Iterate over the zipped arrays
             for (auto it = begin; it != end; ++it) {
+                // Extract temperature, rainfall, and date-time from the zipped iterator
                 auto temperature = boost::get<0>(*it).as_double();
                 auto rainfall = boost::get<1>(*it).as_double();
                 auto date_and_time = boost::get<2>(*it).as_string().c_str();
-                if (temperature < 10.0 || rainfall > 0.0) {
+
+                // Check if conditions for a weather alert are met
+                if (temperature < 10.0 && rainfall > 0.0) {
+                    // Print the weather alert
                     std::cout << "Warning low temperature: " << temperature << " Celsius, and rainfall: " << rainfall << " mm expected on " << date_and_time << std::endl;
                 }
             }
+            // Print an empty line for separation
             std::cout << std::endl;
         }
 
@@ -57,6 +68,7 @@ void process_weather_data(const std::string& latitude, const std::string& longit
         std::this_thread::sleep_for(std::chrono::seconds(20)); // Adjust sleep duration as needed
     }
 }
+
 
 // Function to fetch weather data from the API
 void fetch_weather_data(const std::string& latitude, const std::string& longitude) {
@@ -188,9 +200,9 @@ void user_input_thread(std::string& latitude, std::string& longitude) {
 }
 
 int main() {
-    //Location: Wroclaw, Poland
-    std::string latitude = "51.10"; 
-    std::string longitude = "17.03";
+    //Default Location: Reykjavik, Iceland
+    std::string latitude = "64.1355"; 
+    std::string longitude = "-21.8954";
 
 
     while (true) {
